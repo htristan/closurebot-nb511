@@ -61,12 +61,14 @@ def post_to_discord(event):
     webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
 
     embed = DiscordEmbed(title=f"ON511 Closure Update", color=15548997)
-    embed.add_embed_field(name="Road", value=event['RoadwayName'], inline=False)
-    embed.add_embed_field(name="Event Type", value=event['EventType'], inline=False)
+    embed.add_embed_field(name="Road", value=event['RoadwayName'])
+    embed.add_embed_field(name="Event Type", value=event['EventType'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
-    embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']), inline=False)
-    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'], inline=False)
-    embed.add_embed_field(name="511 Link", value="https://511on.ca/map#Closures-" + event['ID'], inline=False)
+    embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
+    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
+    embed.add_embed_field(name="511 Link", value="[511 Link](https://511on.ca/map#Closures-" + event['ID'] + ")", inline=False)
+    embed.add_embed_field(name="WME Link",
+        value=f"[WME Link](https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15)")
     # Send the closure notification
     webhook.add_embed(embed)
     webhook.execute()

@@ -7,4 +7,4 @@ source venv/bin/activate
 source .env_vars
 
 # Run the Python script
-python3 scrape.py
+python3 scrape.py 
