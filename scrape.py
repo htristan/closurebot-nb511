@@ -26,6 +26,8 @@ polygon = Polygon([
     (43.30418457436259, -79.67211764818376),
     (43.67878795749117, -79.93304294115251)
 ])
+# Define if we should use the filter or just open it up wide to everyone
+skipPolygon = True
 
 DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK']
 AWS_ACCESS_KEY_ID = os.environ['AWS_DB_KEY']
@@ -124,7 +126,7 @@ def check_and_post_events():
             # Create a point from the event's coordinates
             point = Point(event['Latitude'], event['Longitude'])
             # Check if the point is within the polygon
-            if polygon.contains(point):
+            if polygon.contains(point) | skipPolygon:
                 # Try to get the event with the specified ID and isActive=1 from the DynamoDB table
                 dbResponse = table.query(
                     KeyConditionExpression=Key('EventID').eq(event['ID']),
