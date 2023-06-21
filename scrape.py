@@ -30,7 +30,6 @@ polygon = Polygon([
 DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK']
 AWS_ACCESS_KEY_ID = os.environ['AWS_DB_KEY']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_DB_SECRET_ACCESS_KEY']
-CHANNEL_ID = '1120047133802897408'
 
 # Create a DynamoDB resource object
 dynamodb = boto3.resource('dynamodb',
