@@ -73,7 +73,6 @@ def post_to_discord_closure(event):
     embed = DiscordEmbed(title=f"ON511 Closure Update", color=15548997)
     embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
-    embed.add_embed_field(name="Event Type", value=event['EventType'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
@@ -91,7 +90,6 @@ def post_to_discord_completed(event):
     embed = DiscordEmbed(title=f"ON511 Closure Update", color='34e718')
     embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
-    embed.add_embed_field(name="Event Type", value=event['EventType'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     embed.add_embed_field(name="WME Link",
