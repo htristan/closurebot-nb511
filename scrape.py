@@ -2,11 +2,13 @@ import requests
 import json
 import time
 import boto3
+from boto3.dynamodb.conditions import Attr
+from boto3.dynamodb.conditions import Key
 from shapely.geometry import Point, Polygon
 from decimal import Decimal
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import os
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from pytz import timezone
 
 # Define the coordinates of your polygon
@@ -40,7 +42,6 @@ dynamodb = boto3.resource('dynamodb',
 # Specify the name of your DynamoDB table
 table = dynamodb.Table('ON511-ClosureDB')
 
-
 # Function to convert the float values in the event data to Decimal, as DynamoDB doesn't support float type
 def float_to_decimal(event):
     for key, value in event.items():
@@ -56,7 +57,7 @@ def unix_to_readable(unix_timestamp):
     eastern_time = utc_time.replace(tzinfo=timezone('UTC')).astimezone(eastern)
     return eastern_time.strftime('%Y-%b-%d %I:%M %p')
 
-def post_to_discord(event):
+def post_to_discord_closure(event):
     # Create a webhook instance
     webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
 
@@ -81,10 +82,39 @@ def post_to_discord(event):
     webhook.add_embed(embed)
     webhook.execute()
 
+def post_to_discord_completed(event):
+    # Create a webhook instance
+    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
+
+    embed = DiscordEmbed(title=f"ON511 Closure Update", color='34e718')
+    embed.add_embed_field(name="Road", value=event['RoadwayName'])
+    embed.add_embed_field(name="Event Type", value=event['EventType'])
+    embed.add_embed_field(name="Information", value=event['Description'], inline=False)
+    embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
+    embed.add_embed_field(name="WME Link",
+        value=f"[WME Link](https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15)")
+    # Send the closure notification
+    webhook.add_embed(embed)
+    webhook.execute()
+
 def check_and_post_events():
+    #check if we need to clean old events
+    last_execution_day = get_last_execution_day()
+    today = date.today().isoformat()
+    if last_execution_day is None or last_execution_day < today:
+        # Perform cleanup of old events
+        cleanup_old_events()
+
+        # Update last execution day to current date
+        update_last_execution_day()
+
     # Perform API call to ON511 API
     response = requests.get("https://511on.ca/api/v2/get/event")
+    if not response.ok:
+        raise Exception('Issue connecting to ON511 API')
 
+    #use the response to close out anything recent
+    close_recent_events(response)
     # Parse the response
     data = json.loads(response.text)
 
@@ -96,16 +126,100 @@ def check_and_post_events():
             point = Point(event['Latitude'], event['Longitude'])
             # Check if the point is within the polygon
             if polygon.contains(point):
-                # Check if the event ID is already in the DynamoDB table
-                if table.get_item(Key={'EventID': event['ID']}).get('Item') is None:
+                # Try to get the event with the specified ID and isActive=1 from the DynamoDB table
+                dbResponse = table.query(
+                    KeyConditionExpression=Key('EventID').eq(event['ID']),
+                    FilterExpression=Attr('isActive').eq(1)
+                )
+                #If the event is not in the DynamoDB table
+                if not dbResponse['Items']:
                     # If the event is within the specified area and has not been posted before, post it to Discord
-                    post_to_discord(event)
+                    post_to_discord_closure(event)
                     # Set the EventID key in the event data
                     event['EventID'] = event['ID']
+                    # Set the isActive attribute
+                    event['isActive'] = 1
                     # Convert float values in the event to Decimal
                     event = float_to_decimal(event)
                     # Add the event ID to the DynamoDB table
                     table.put_item(Item=event)
+
+def close_recent_events(responseObject):
+    #function uses the API response from ON511 to determine what we stored in the DB that can now be closed
+    #if it finds a closure no longer listed in the response object, then it marks it closed and posts to discord
+    data = json.loads(responseObject.text)
+
+    # Create a set of active event IDs
+    active_event_ids = {event['ID'] for event in data}
+
+    # Get the list of event IDs in the table
+    response = table.scan(
+        FilterExpression=Attr('isActive').eq(1)
+    )
+
+    # Iterate over the items
+    for item in response['Items']:
+        # If an item's ID is not in the set of active event IDs, mark it as closed
+        if item['EventID'] not in active_event_ids:
+            # Remove the isActive attribute from the item
+            table.update_item(
+                Key={'EventID': item['EventID']},
+                UpdateExpression="SET isActive = :val",
+                ExpressionAttributeValues={':val': 0}
+            )
+            # Convert float values in the item to Decimal
+            item = float_to_decimal(item)
+            # Notify about closure on Discord
+            post_to_discord_completed(item)
+
+def cleanup_old_events():
+    # Get the current time and subtract 5 days to get the cut-off time
+    now = datetime.now()
+    cutoff = now - timedelta(days=5)
+    # Convert the cutoff time to Unix timestamp
+    cutoff_unix = Decimal(str(cutoff.timestamp()))
+    # Initialize the scan parameters
+    scan_params = {
+        'FilterExpression': Attr('LastUpdated').lt(cutoff_unix) & Attr('isActive').eq(0)
+    }
+    while True:
+        # Perform the scan operation
+        response = table.scan(**scan_params)
+        # Iterate over the matching items and delete each one
+        for item in response['Items']:
+            table.delete_item(
+                Key={
+                    'EventID': item['EventID']
+                }
+            )
+        # If the scan returned a LastEvaluatedKey, continue the scan from where it left off
+        if 'LastEvaluatedKey' in response:
+            scan_params['ExclusiveStartKey'] = response['LastEvaluatedKey']
+        else:
+            # If no LastEvaluatedKey was returned, the scan has completed and we can break from the loop
+            break
+
+def get_last_execution_day():
+    response = table.query(
+        KeyConditionExpression=Key('EventID').eq('LastCleanup')
+    )
+
+    items = response.get('Items')
+    if items:
+        item = items[0]
+        last_execution_day = item.get('LastExecutionDay')
+        return last_execution_day
+
+    return None
+
+def update_last_execution_day():
+    today = datetime.now().date().isoformat()
+    table.put_item(
+        Item={
+            'EventID': 'LastCleanup',
+            'LastExecutionDay': today
+        }
+    )
 
 def lambda_handler(event, context):
     check_and_post_events()
