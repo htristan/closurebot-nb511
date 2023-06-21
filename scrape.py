@@ -71,6 +71,7 @@ def post_to_discord_closure(event):
         URLType = 'Closures'
 
     embed = DiscordEmbed(title=f"ON511 Closure Update", color=15548997)
+    embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://511on.ca/Content/ON/Images/511_logo.png')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Event Type", value=event['EventType'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
@@ -88,6 +89,7 @@ def post_to_discord_completed(event):
     webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
 
     embed = DiscordEmbed(title=f"ON511 Closure Update", color='34e718')
+    embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://511on.ca/Content/ON/Images/511_logo.png')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Event Type", value=event['EventType'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
