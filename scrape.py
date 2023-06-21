@@ -70,15 +70,17 @@ def post_to_discord_closure(event):
     else:
         URLType = 'Closures'
 
+    urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
+    url511 = f"https://511on.ca/map#{URLType}-{event['ID']}"
+    urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
+
     embed = DiscordEmbed(title=f"ON511 Closure Update", color=15548997)
     embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
-    embed.add_embed_field(name="511 Link", value=f"[511 Link](https://511on.ca/map#{URLType}-{event['ID']})", inline=False)
-    embed.add_embed_field(name="WME Link",
-        value=f"[WME Link](https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15)")
+    embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     # Send the closure notification
     webhook.add_embed(embed)
     webhook.execute()
@@ -87,13 +89,16 @@ def post_to_discord_completed(event):
     # Create a webhook instance
     webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
 
+    urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
+    urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
+
     embed = DiscordEmbed(title=f"ON511 Closure Update", color='34e718')
     embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
-    embed.add_embed_field(name="WME Link",
-        value=f"[WME Link](https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15)")
+    embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
+
     # Send the closure notification
     webhook.add_embed(embed)
     webhook.execute()
