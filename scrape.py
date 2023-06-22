@@ -73,9 +73,10 @@ def post_to_discord_closure(event):
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     url511 = f"https://511on.ca/map#{URLType}-{event['ID']}"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
+    discordUsername = "ON511"
+    discordAvatarURL = "https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg"
 
-    embed = DiscordEmbed(title=f"ON511 Closure - Closed", color=15548997)
-    embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg')
+    embed = DiscordEmbed(title=f"ON511 Closure - Closed", username=discordUsername, avatar_url=discordAvatarURL, color=15548997)
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
@@ -92,8 +93,7 @@ def post_to_discord_completed(event):
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
-    embed = DiscordEmbed(title=f"ON511 Closure - Cleared", color='34e718')
-    embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg')
+    embed = DiscordEmbed(title=f"ON511 Closure - Cleared", username=discordUsername, avatar_url=discordAvatarURL, color='34e718')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
