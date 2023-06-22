@@ -74,7 +74,7 @@ def post_to_discord_closure(event):
     url511 = f"https://511on.ca/map#{URLType}-{event['ID']}"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
-    embed = DiscordEmbed(title=f"ON511 Closure Update", color=15548997)
+    embed = DiscordEmbed(title=f"ON511 Closure - Closed", color=15548997)
     embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
@@ -92,7 +92,7 @@ def post_to_discord_completed(event):
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
-    embed = DiscordEmbed(title=f"ON511 Closure Update", color='34e718')
+    embed = DiscordEmbed(title=f"ON511 Closure - Cleared", color='34e718')
     embed.set_author(name='ON511', url='https://511on.ca/map', icon_url='https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
