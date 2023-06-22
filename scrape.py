@@ -33,6 +33,9 @@ DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK']
 AWS_ACCESS_KEY_ID = os.environ['AWS_DB_KEY']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_DB_SECRET_ACCESS_KEY']
 
+discordUsername = "ON511"
+discordAvatarURL = "https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg"
+
 # Create a DynamoDB resource object
 dynamodb = boto3.resource('dynamodb',
     region_name='us-east-1',
@@ -73,8 +76,6 @@ def post_to_discord_closure(event):
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     url511 = f"https://511on.ca/map#{URLType}-{event['ID']}"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
-    discordUsername = "ON511"
-    discordAvatarURL = "https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg"
 
     embed = DiscordEmbed(title=f"ON511 Closure - Closed", username=discordUsername, avatar_url=discordAvatarURL, color=15548997)
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
