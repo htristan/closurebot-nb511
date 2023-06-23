@@ -77,7 +77,7 @@ def post_to_discord_closure(event):
     url511 = f"https://511on.ca/map#{URLType}-{event['ID']}"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
-    embed = DiscordEmbed(title=f"ON511 Closure - Closed", color=15548997)
+    embed = DiscordEmbed(title=f"Closed", color=15548997)
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
@@ -94,7 +94,7 @@ def post_to_discord_completed(event):
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
-    embed = DiscordEmbed(title=f"ON511 Closure - Cleared", color='34e718')
+    embed = DiscordEmbed(title=f"Cleared", color='34e718')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
@@ -172,11 +172,11 @@ def close_recent_events(responseObject):
             # Convert float values in the item to Decimal
             item = float_to_decimal(item)
             # Remove the isActive attribute from the item
-            # table.update_item(
-            #     Key={'EventID': item['EventID']},
-            #     UpdateExpression="SET isActive = :val",
-            #     ExpressionAttributeValues={':val': 0}
-            # )
+            table.update_item(
+                Key={'EventID': item['EventID']},
+                UpdateExpression="SET isActive = :val",
+                ExpressionAttributeValues={':val': 0}
+            )
             # Notify about closure on Discord
             post_to_discord_completed(item)
 
@@ -231,5 +231,3 @@ def update_last_execution_day():
 
 def lambda_handler(event, context):
     check_and_post_events()
-
-check_and_post_events()
