@@ -93,6 +93,29 @@ def post_to_discord_closure(event):
     webhook.add_embed(embed)
     webhook.execute()
 
+def post_to_discord_updated(event):
+    # Function to post to discord that an event was updated (already previously reported)
+    # Create a webhook instance
+    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
+
+    urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
+    urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
+
+    embed = DiscordEmbed(title=f"Closure Update", color='ff9a00')
+    embed.add_embed_field(name="Road", value=event['RoadwayName'])
+    embed.add_embed_field(name="Information", value=event['Description'], inline=False)
+    embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
+    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
+    if event['Comment'] != None:
+        embed.add_embed_field(name="Comment", value=event['Comment'], inline=False)
+    embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
+    embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
+    embed.set_timestamp(datetime.utcfromtimestamp(int(event['LastUpdated'])))
+
+    # Send the closure notification
+    webhook.add_embed(embed)
+    webhook.execute()
+
 def post_to_discord_completed(event):
     # Create a webhook instance
     webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
@@ -113,29 +136,6 @@ def post_to_discord_completed(event):
     embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
     embed.set_timestamp(datetime.utcfromtimestamp(lastTouched))
-
-    # Send the closure notification
-    webhook.add_embed(embed)
-    webhook.execute()
-
-def post_to_discord_updated(event):
-    # Function to post to discord that an event was updated (already previously reported)
-    # Create a webhook instance
-    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
-
-    urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
-    urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
-
-    embed = DiscordEmbed(title=f"Closure Update", color='ff9a00')
-    embed.add_embed_field(name="Road", value=event['RoadwayName'])
-    embed.add_embed_field(name="Information", value=event['Description'], inline=False)
-    embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
-    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
-    if event['Comment'] != None:
-        embed.add_embed_field(name="Comment", value=event['Comment'], inline=False)
-    embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
-    embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
-    embed.set_timestamp(datetime.utcfromtimestamp(int(event['LastUpdated'])))
 
     # Send the closure notification
     webhook.add_embed(embed)
