@@ -84,6 +84,7 @@ def post_to_discord_closure(event):
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
+    embed.set_timestamp(datetime.utcfromtimestamp(int(event['StartDate'])))
     # Send the closure notification
     webhook.add_embed(embed)
     webhook.execute()
@@ -101,6 +102,7 @@ def post_to_discord_completed(event):
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
+    embed.set_timestamp(datetime.utcfromtimestamp(int(event['StartDate'])))
 
     # Send the closure notification
     webhook.add_embed(embed)
