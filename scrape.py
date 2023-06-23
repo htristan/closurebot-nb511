@@ -56,14 +56,14 @@ def float_to_decimal(event):
     return event
 
 def unix_to_readable(unix_timestamp):
-    utc_time = datetime.utcfromtimestamp(unix_timestamp)
+    utc_time = datetime.utcfromtimestamp(int(unix_timestamp))
     eastern = timezone('US/Eastern')
     eastern_time = utc_time.replace(tzinfo=timezone('UTC')).astimezone(eastern)
     return eastern_time.strftime('%Y-%b-%d %I:%M %p')
 
 def post_to_discord_closure(event):
     # Create a webhook instance
-    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
+    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
 
     #define type for URL
     if event['EventType'] == 'closures':
@@ -77,7 +77,7 @@ def post_to_discord_closure(event):
     url511 = f"https://511on.ca/map#{URLType}-{event['ID']}"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
-    embed = DiscordEmbed(title=f"ON511 Closure - Closed", username=discordUsername, avatar_url=discordAvatarURL, color=15548997)
+    embed = DiscordEmbed(title=f"ON511 Closure - Closed", color=15548997)
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
@@ -89,12 +89,12 @@ def post_to_discord_closure(event):
 
 def post_to_discord_completed(event):
     # Create a webhook instance
-    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL)
+    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
 
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
-    embed = DiscordEmbed(title=f"ON511 Closure - Cleared", username=discordUsername, avatar_url=discordAvatarURL, color='34e718')
+    embed = DiscordEmbed(title=f"ON511 Closure - Cleared", color='34e718')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
@@ -102,6 +102,7 @@ def post_to_discord_completed(event):
 
     # Send the closure notification
     webhook.add_embed(embed)
+    print(webhook.json)
     webhook.execute()
 
 def check_and_post_events():
@@ -168,14 +169,14 @@ def close_recent_events(responseObject):
     for item in response['Items']:
         # If an item's ID is not in the set of active event IDs, mark it as closed
         if item['EventID'] not in active_event_ids:
-            # Remove the isActive attribute from the item
-            table.update_item(
-                Key={'EventID': item['EventID']},
-                UpdateExpression="SET isActive = :val",
-                ExpressionAttributeValues={':val': 0}
-            )
             # Convert float values in the item to Decimal
             item = float_to_decimal(item)
+            # Remove the isActive attribute from the item
+            # table.update_item(
+            #     Key={'EventID': item['EventID']},
+            #     UpdateExpression="SET isActive = :val",
+            #     ExpressionAttributeValues={':val': 0}
+            # )
             # Notify about closure on Discord
             post_to_discord_completed(item)
 
@@ -230,3 +231,5 @@ def update_last_execution_day():
 
 def lambda_handler(event, context):
     check_and_post_events()
+
+check_and_post_events()
