@@ -145,7 +145,7 @@ def post_to_discord_completed(event):
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
-    embed.add_embed_field(name="End Time", value=unix_to_readable(lastTouched))
+    embed.add_embed_field(name="Ended", value=unix_to_readable(lastTouched))
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
