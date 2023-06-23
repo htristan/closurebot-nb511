@@ -48,7 +48,6 @@ dynamodb = boto3.resource('dynamodb',
 table = dynamodb.Table('ON511-ClosureDB')
 
 # set the current UTC timestamp for use in a few places
-utc_timestamp = int(time.mktime(datetime.utcnow().timetuple()))
 utc_timestamp = calendar.timegm(datetime.utcnow().timetuple())
 
 # Function to convert the float values in the event data to Decimal, as DynamoDB doesn't support float type
