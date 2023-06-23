@@ -83,11 +83,11 @@ def post_to_discord_closure(event):
 
     embed = DiscordEmbed(title=f"Closed", color=15548997)
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
+    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     if 'PlannedEndDate' in event:
         embed.add_embed_field(name="Planned End Time", value=unix_to_readable(event['PlannedEndDate']))
-    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
     embed.set_timestamp(datetime.utcfromtimestamp(int(event['StartDate'])))
@@ -114,11 +114,11 @@ def post_to_discord_updated(event):
 
     embed = DiscordEmbed(title=f"Closure Update", color='ff9a00')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
+    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     if 'PlannedEndDate' in event:
         embed.add_embed_field(name="Planned End Time", value=unix_to_readable(event['PlannedEndDate']))
-    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     if event['Comment'] != None:
         embed.add_embed_field(name="Comment", value=event['Comment'], inline=False)
     embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
@@ -143,10 +143,10 @@ def post_to_discord_completed(event):
 
     embed = DiscordEmbed(title=f"Cleared", color='34e718')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
+    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     embed.add_embed_field(name="Ended", value=unix_to_readable(lastTouched))
-    embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
     embed.set_timestamp(datetime.utcfromtimestamp(lastTouched))
