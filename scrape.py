@@ -46,6 +46,9 @@ dynamodb = boto3.resource('dynamodb',
 # Specify the name of your DynamoDB table
 table = dynamodb.Table('ON511-ClosureDB')
 
+# set the current UTC timestamp for use in a few places
+utc_timestamp = int(time.mktime(datetime.utcnow().timetuple()))
+
 # Function to convert the float values in the event data to Decimal, as DynamoDB doesn't support float type
 def float_to_decimal(event):
     for key, value in event.items():
@@ -100,6 +103,10 @@ def post_to_discord_completed(event):
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
+    if 'lastTouched' in event:
+        embed.add_embed_field(name="Approximate End Time", value=unix_to_readable(event['lastTouched']))
+    else:
+        embed.add_embed_field(name="Approximate End Time", value=unix_to_readable(utc_timestamp))
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
@@ -151,10 +158,20 @@ def check_and_post_events():
                     event['EventID'] = event['ID']
                     # Set the isActive attribute
                     event['isActive'] = 1
+                    # set LastTouched
+                    event['lastTouched'] = utc_timestamp
                     # Convert float values in the event to Decimal
                     event = float_to_decimal(event)
                     # Add the event ID to the DynamoDB table
                     table.put_item(Item=event)
+                else:
+                    # We have seen this event before, so let's store that we just saw it to keep track of the last touch time
+                    event = float_to_decimal(event)
+                    table.update_item(
+                        Key={'EventID': event['ID']},
+                        UpdateExpression="SET lastTouched = :val",
+                        ExpressionAttributeValues={':val': utc_timestamp}
+                    )
 
 def close_recent_events(responseObject):
     #function uses the API response from ON511 to determine what we stored in the DB that can now be closed
