@@ -9,6 +9,7 @@ from decimal import Decimal
 from discord_webhook import DiscordWebhook, DiscordEmbed
 import os
 from datetime import datetime, timedelta, date
+import calendar
 from pytz import timezone
 
 # Define the coordinates of your polygon
@@ -48,6 +49,7 @@ table = dynamodb.Table('ON511-ClosureDB')
 
 # set the current UTC timestamp for use in a few places
 utc_timestamp = int(time.mktime(datetime.utcnow().timetuple()))
+utc_timestamp = calendar.timegm(datetime.utcnow().timetuple())
 
 # Function to convert the float values in the event data to Decimal, as DynamoDB doesn't support float type
 def float_to_decimal(event):
@@ -99,18 +101,19 @@ def post_to_discord_completed(event):
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
+    if 'lastTouched' in event:
+        lastTouched = int(event['lastTouched'])
+    else:
+        lastTouched = utc_timestamp
+
     embed = DiscordEmbed(title=f"Cleared", color='34e718')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
-    if 'lastTouched' in event:
-        embed.add_embed_field(name="Approximate End Time", value=unix_to_readable(event['lastTouched']))
-    else:
-        embed.add_embed_field(name="Approximate End Time", value=unix_to_readable(utc_timestamp))
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
-    embed.set_timestamp(datetime.utcfromtimestamp(int(event['StartDate'])))
+    embed.set_timestamp(datetime.utcfromtimestamp(lastTouched))
 
     # Send the closure notification
     webhook.add_embed(embed)
