@@ -86,7 +86,7 @@ def post_to_discord_closure(event):
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
-    if 'PlannedEndDate' in event:
+    if 'PlannedEndDate' in event and event['PlannedEndDate'] is not None:
         embed.add_embed_field(name="Planned End Time", value=unix_to_readable(event['PlannedEndDate']))
     embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
@@ -117,7 +117,7 @@ def post_to_discord_updated(event):
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
-    if 'PlannedEndDate' in event:
+    if 'PlannedEndDate' in event and event['PlannedEndDate'] is not None:
         embed.add_embed_field(name="Planned End Time", value=unix_to_readable(event['PlannedEndDate']))
     if event['Comment'] != None:
         embed.add_embed_field(name="Comment", value=event['Comment'], inline=False)
