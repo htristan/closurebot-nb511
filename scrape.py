@@ -499,8 +499,6 @@ def check_and_post_events():
                 )
                 #If the event is not in the DynamoDB table
                 if not dbResponse['Items']:
-                    # If the event is within the specified area and has not been posted before, post it to Discord
-                    post_to_discord_closure(event)
                     # Set the EventID key in the event data
                     event['EventID'] = event['ID']
                     # Set the isActive attribute
@@ -510,6 +508,8 @@ def check_and_post_events():
                     event['DetectedPolygon'] = check_which_polygon_point(point)
                     # Convert float values in the event to Decimal
                     event = float_to_decimal(event)
+                    # If the event is within the specified area and has not been posted before, post it to Discord
+                    post_to_discord_closure(event)
                     # Add the event ID to the DynamoDB table
                     table.put_item(Item=event)
                 else:
@@ -520,13 +520,13 @@ def check_and_post_events():
                     if lastUpdated != None:
                         # Now, see if the version we stored is different
                         if lastUpdated != event['LastUpdated']:
-                            # It's different, so we should fire an update notification
-                            post_to_discord_updated(event)
                             # Store the most recent updated time:
                             event['EventID'] = event['ID']
                             event['isActive'] = 1
                             event['lastTouched'] = utc_timestamp
                             event['DetectedPolygon'] = check_which_polygon_point(point)
+                            # It's different, so we should fire an update notification
+                            post_to_discord_updated(event)
                             table.put_item(Item=event)
                     # let's store that we just saw it to keep track of the last touch time
                     table.update_item(
