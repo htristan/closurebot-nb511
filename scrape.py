@@ -361,15 +361,31 @@ def check_which_polygon_point(point):
     except:
         return 'Other'
 
+def getThreadID(threadName):
+    if threadName == 'GTA':
+        return 1123517850502565898
+    elif threadName == 'Central Ontario':
+        return 1123517842969604138
+    elif threadName == 'Northern Ontario':
+        return 1123519381499019386
+    elif threadName == 'Southern Ontario':
+        return 1123519680917819503
+    else:
+        return None
+
 def unix_to_readable(unix_timestamp):
     utc_time = datetime.utcfromtimestamp(int(unix_timestamp))
     eastern = timezone('US/Eastern')
     eastern_time = utc_time.replace(tzinfo=timezone('UTC')).astimezone(eastern)
     return eastern_time.strftime('%Y-%b-%d %I:%M %p')
 
-def post_to_discord_closure(event):
+def post_to_discord_closure(event,threadName=None):
     # Create a webhook instance
-    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
+    threadID = getThreadID(threadName)
+    if threadID is not None:
+        webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL, thread_id=threadID)
+    else:
+        webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
 
     #define type for URL
     if event['EventType'] == 'closures':
@@ -378,6 +394,7 @@ def post_to_discord_closure(event):
         URLType = 'Incidents'
     else:
         URLType = 'Closures'
+
 
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     url511 = f"https://511on.ca/map#{URLType}-{event['ID']}"
@@ -399,10 +416,14 @@ def post_to_discord_closure(event):
     webhook.add_embed(embed)
     webhook.execute()
 
-def post_to_discord_updated(event):
+def post_to_discord_updated(event,threadID=None):
     # Function to post to discord that an event was updated (already previously reported)
     # Create a webhook instance
-    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
+    threadID = getThreadID(threadName)
+    if threadID is not None:
+        webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL, thread_id=threadID)
+    else:
+        webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
 
     #define type for URL
     if event['EventType'] == 'closures':
@@ -435,9 +456,13 @@ def post_to_discord_updated(event):
     webhook.add_embed(embed)
     webhook.execute()
 
-def post_to_discord_completed(event):
+def post_to_discord_completed(event,threadID=None):
     # Create a webhook instance
-    webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
+    threadID = getThreadID(threadName)
+    if threadID is not None:
+        webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL, thread_id=threadID)
+    else:
+        webhook = DiscordWebhook(url=DISCORD_WEBHOOK_URL, username=discordUsername, avatar_url=discordAvatarURL)
 
     urlWME = f"https://www.waze.com/en-GB/editor?env=usa&lon={event['Longitude']}&lat={event['Latitude']}&zoomLevel=15"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
@@ -509,7 +534,7 @@ def check_and_post_events():
                     # Convert float values in the event to Decimal
                     event = float_to_decimal(event)
                     # If the event is within the specified area and has not been posted before, post it to Discord
-                    post_to_discord_closure(event)
+                    post_to_discord_closure(event,event['DetectedPolygon'])
                     # Add the event ID to the DynamoDB table
                     table.put_item(Item=event)
                 else:
@@ -526,7 +551,7 @@ def check_and_post_events():
                             event['lastTouched'] = utc_timestamp
                             event['DetectedPolygon'] = check_which_polygon_point(point)
                             # It's different, so we should fire an update notification
-                            post_to_discord_updated(event)
+                            post_to_discord_updated(event,event['DetectedPolygon'])
                             table.put_item(Item=event)
                     # let's store that we just saw it to keep track of the last touch time
                     table.update_item(
@@ -561,7 +586,10 @@ def close_recent_events(responseObject):
                 ExpressionAttributeValues={':val': 0}
             )
             # Notify about closure on Discord
-            post_to_discord_completed(item)
+            if 'DetectedPolygon' in item and item['DetectedPolygon'] is not none:
+                post_to_discord_completed(item,item['DetectedPolygon'])
+            else:
+                post_to_discord_completed(item)
 
 def cleanup_old_events():
     # Get the current time and subtract 5 days to get the cut-off time
