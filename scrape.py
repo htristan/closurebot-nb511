@@ -586,7 +586,7 @@ def close_recent_events(responseObject):
                 ExpressionAttributeValues={':val': 0}
             )
             # Notify about closure on Discord
-            if 'DetectedPolygon' in item and item['DetectedPolygon'] is not none:
+            if 'DetectedPolygon' in item and item['DetectedPolygon'] is not None:
                 post_to_discord_completed(item,item['DetectedPolygon'])
             else:
                 post_to_discord_completed(item)
