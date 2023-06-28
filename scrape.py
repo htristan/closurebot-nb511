@@ -371,7 +371,7 @@ def getThreadID(threadName):
     elif threadName == 'Southern Ontario':
         return 1123519680917819503
     else:
-        return None
+        return 1123663045743354059 #Other catch all thread
 
 def unix_to_readable(unix_timestamp):
     utc_time = datetime.utcfromtimestamp(int(unix_timestamp))
@@ -403,8 +403,6 @@ def post_to_discord_closure(event,threadName=None):
     embed = DiscordEmbed(title=f"Closed", color=15548997)
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
-    if 'DetectedPolygon' in event and event['DetectedPolygon'] is not None:
-        embed.add_embed_field(name="Region", value=event['DetectedPolygon'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     if 'PlannedEndDate' in event and event['PlannedEndDate'] is not None:
@@ -440,8 +438,6 @@ def post_to_discord_updated(event,threadName=None):
     embed = DiscordEmbed(title=f"Closure Update", color='ff9a00')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
-    if 'DetectedPolygon' in event and event['DetectedPolygon'] is not None:
-        embed.add_embed_field(name="Region", value=event['DetectedPolygon'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     if 'PlannedEndDate' in event and event['PlannedEndDate'] is not None:
@@ -475,8 +471,6 @@ def post_to_discord_completed(event,threadName=None):
     embed = DiscordEmbed(title=f"Cleared", color='34e718')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
-    if 'DetectedPolygon' in event and event['DetectedPolygon'] is not None:
-        embed.add_embed_field(name="Region", value=event['DetectedPolygon'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     embed.add_embed_field(name="Ended", value=unix_to_readable(lastTouched))
