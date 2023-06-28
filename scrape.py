@@ -642,5 +642,3 @@ def update_last_execution_day():
 
 def lambda_handler(event, context):
     check_and_post_events()
-
-check_and_post_events()
