@@ -416,7 +416,7 @@ def post_to_discord_closure(event,threadName=None):
     webhook.add_embed(embed)
     webhook.execute()
 
-def post_to_discord_updated(event,threadID=None):
+def post_to_discord_updated(event,threadName=None):
     # Function to post to discord that an event was updated (already previously reported)
     # Create a webhook instance
     threadID = getThreadID(threadName)
@@ -456,7 +456,7 @@ def post_to_discord_updated(event,threadID=None):
     webhook.add_embed(embed)
     webhook.execute()
 
-def post_to_discord_completed(event,threadID=None):
+def post_to_discord_completed(event,threadName=None):
     # Create a webhook instance
     threadID = getThreadID(threadName)
     if threadID is not None:
