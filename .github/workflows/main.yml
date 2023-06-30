@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - develop
 
 jobs:
   deploy:
@@ -12,6 +13,16 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
+
+    - name: Copy the correct config file based on branch
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          cp config_production.json config.json
+        elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+          cp config_develop.json config.json
+        else
+          cp config_develop.json config.json
+        fi
 
     - name: Set up Python
       uses: actions/setup-python@v2

@@ -312,6 +312,9 @@ polygon_SouthernOntario = Polygon([
     (43.38832077, -81.73173649)
 ])
 
+# Load the configuration file
+with open('config.json', 'r') as f:
+    config = json.load(f)
 
 # Define if we should use the filter or just open it up wide to everyone
 skipPolygon = True
@@ -331,7 +334,7 @@ dynamodb = boto3.resource('dynamodb',
     )
 
 # Specify the name of your DynamoDB table
-table = dynamodb.Table('ON511-ClosureDB')
+table = dynamodb.Table(config['db_name'])
 
 # set the current UTC timestamp for use in a few places
 utc_timestamp = calendar.timegm(datetime.utcnow().timetuple())
