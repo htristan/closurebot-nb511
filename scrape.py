@@ -366,9 +366,8 @@ def check_which_polygon_point(point):
 
 def getThreadID(threadName):
     if threadName == 'GTA':
-        return 1123517850502565898
+        return config['Thread-GTA']
     elif threadName == 'Central Ontario':
-        return 1123517842969604138
         return config['Thread-CentralOntario']
     elif threadName == 'Northern Ontario':
         return config['Thread-NorthernOntario']
@@ -640,5 +639,3 @@ def update_last_execution_day():
 
 def lambda_handler(event, context):
     check_and_post_events()
-
-check_and_post_events()
