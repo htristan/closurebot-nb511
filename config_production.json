@@ -1,4 +1,9 @@
 {
   "db_name": "ON511-ClosureDB",
-  "function_name": "ClosureBot-ON511"
+  "function_name": "ClosureBot-ON511",
+  "Thread-SouthernOntario": 1124364642383310971,
+  "Thread-GTA": 1124364680178180197,
+  "Thread-CentralOntario": 1124364693717397507,
+  "Thread-NorthernOntario": 1124364658388770827,
+  "Thread-CatchAll": 1124364619767611432
 }

@@ -369,12 +369,13 @@ def getThreadID(threadName):
         return 1123517850502565898
     elif threadName == 'Central Ontario':
         return 1123517842969604138
+        return config['Thread-CentralOntario']
     elif threadName == 'Northern Ontario':
-        return 1123519381499019386
+        return config['Thread-NorthernOntario']
     elif threadName == 'Southern Ontario':
-        return 1123519680917819503
+        return config['Thread-SouthernOntario']
     else:
-        return 1123663045743354059 #Other catch all thread
+        return config['Thread-CatchAll'] #Other catch all thread
 
 def unix_to_readable(unix_timestamp):
     utc_time = datetime.utcfromtimestamp(int(unix_timestamp))
@@ -639,3 +640,5 @@ def update_last_execution_day():
 
 def lambda_handler(event, context):
     check_and_post_events()
+
+check_and_post_events()
