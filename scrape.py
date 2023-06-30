@@ -366,15 +366,15 @@ def check_which_polygon_point(point):
 
 def getThreadID(threadName):
     if threadName == 'GTA':
-        return 1123517850502565898
+        return config['Thread-GTA']
     elif threadName == 'Central Ontario':
-        return 1123517842969604138
+        return config['Thread-CentralOntario']
     elif threadName == 'Northern Ontario':
-        return 1123519381499019386
+        return config['Thread-NorthernOntario']
     elif threadName == 'Southern Ontario':
-        return 1123519680917819503
+        return config['Thread-SouthernOntario']
     else:
-        return 1123663045743354059 #Other catch all thread
+        return config['Thread-CatchAll'] #Other catch all thread
 
 def unix_to_readable(unix_timestamp):
     utc_time = datetime.utcfromtimestamp(int(unix_timestamp))
