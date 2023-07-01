@@ -411,7 +411,7 @@ def post_to_discord_closure(event,threadName=None):
     if 'PlannedEndDate' in event and event['PlannedEndDate'] is not None:
         embed.add_embed_field(name="Planned End Time", value=unix_to_readable(event['PlannedEndDate']))
     embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
-    embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
+    embed.set_footer(text=config['license_notice'])
     embed.set_timestamp(datetime.utcfromtimestamp(int(event['StartDate'])))
     # Send the closure notification
     webhook.add_embed(embed)
@@ -448,7 +448,7 @@ def post_to_discord_updated(event,threadName=None):
     if event['Comment'] != None:
         embed.add_embed_field(name="Comment", value=event['Comment'], inline=False)
     embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
-    embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
+    embed.set_footer(text=config['license_notice'])
     embed.set_timestamp(datetime.utcfromtimestamp(int(event['LastUpdated'])))
 
     # Send the closure notification
@@ -478,7 +478,7 @@ def post_to_discord_completed(event,threadName=None):
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     embed.add_embed_field(name="Ended", value=unix_to_readable(lastTouched))
     embed.add_embed_field(name="Links", value=f"[WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
-    embed.set_footer(text="Contains information licensed under the Open Government Licence – Ontario.")
+    embed.set_footer(text=config['license_notice'])
     embed.set_timestamp(datetime.utcfromtimestamp(lastTouched))
 
     # Send the closure notification
