@@ -378,9 +378,9 @@ def getThreadID(threadName):
 
 def unix_to_readable(unix_timestamp):
     utc_time = datetime.utcfromtimestamp(int(unix_timestamp))
-    eastern = timezone('US/Eastern')
-    eastern_time = utc_time.replace(tzinfo=timezone('UTC')).astimezone(eastern)
-    return eastern_time.strftime('%Y-%b-%d %I:%M %p')
+    local_tz = timezone(config['timezone'])
+    local_time = utc_time.replace(tzinfo=timezone('UTC')).astimezone(local_tz)
+    return local_time.strftime('%Y-%b-%d %I:%M %p')
 
 def post_to_discord_closure(event,threadName=None):
     # Create a webhook instance
