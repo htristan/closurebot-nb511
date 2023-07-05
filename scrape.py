@@ -11,6 +11,7 @@ import os
 from datetime import datetime, timedelta, date
 import calendar
 from pytz import timezone
+import random
 
 # Define the coordinates of your polygon
 polygon_filterPolygon = Polygon([
@@ -378,9 +379,9 @@ def getThreadID(threadName):
 
 def unix_to_readable(unix_timestamp):
     utc_time = datetime.utcfromtimestamp(int(unix_timestamp))
-    eastern = timezone('US/Eastern')
-    eastern_time = utc_time.replace(tzinfo=timezone('UTC')).astimezone(eastern)
-    return eastern_time.strftime('%Y-%b-%d %I:%M %p')
+    local_tz = timezone(config['timezone'])
+    local_time = utc_time.replace(tzinfo=timezone('UTC')).astimezone(local_tz)
+    return local_time.strftime('%Y-%b-%d %I:%M %p')
 
 def post_to_discord_closure(event,threadName=None):
     # Create a webhook instance
@@ -550,12 +551,24 @@ def check_and_post_events():
                             # It's different, so we should fire an update notification
                             post_to_discord_updated(event,event['DetectedPolygon'])
                             table.put_item(Item=event)
-                    # let's store that we just saw it to keep track of the last touch time
-                    table.update_item(
-                        Key={'EventID': event['ID']},
-                        UpdateExpression="SET lastTouched = :val",
-                        ExpressionAttributeValues={':val': utc_timestamp}
-                    )
+                    # get the lasttouched time
+                    lastTouched_datetime = datetime.fromtimestamp(int(dbResponse['Items'][0].get('lastTouched')))
+                    # store the current time now
+                    now = datetime.fromtimestamp(utc_timestamp)
+                    # Compute the difference in minutes between now and lastUpdated
+                    time_diff_min = (now - lastTouched_datetime).total_seconds() / 60
+                    # Compute the variability
+                    variability = random.uniform(-2, 2)  # random float between -2 and 2
+                    # Add variability to the time difference
+                    time_diff_min += variability
+                    # If time_diff_min > 5, then more than 5 minutes have passed (considering variability)
+                    if abs(time_diff_min) > 5:
+                        # let's store that we just saw it to keep track of the last touch time
+                        table.update_item(
+                            Key={'EventID': event['ID']},
+                            UpdateExpression="SET lastTouched = :val",
+                            ExpressionAttributeValues={':val': utc_timestamp}
+                        )
 
 def close_recent_events(responseObject):
     #function uses the API response from ON511 to determine what we stored in the DB that can now be closed
