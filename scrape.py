@@ -446,7 +446,7 @@ def post_to_discord_updated(event,threadName=None):
     embed.add_embed_field(name="Start Time", value=unix_to_readable(event['StartDate']))
     if 'PlannedEndDate' in event and event['PlannedEndDate'] is not None:
         embed.add_embed_field(name="Planned End Time", value=unix_to_readable(event['PlannedEndDate']))
-    if event['Comment'] != None:
+    if 'Comment' in event and event['Comment'] is not None:
         embed.add_embed_field(name="Comment", value=event['Comment'], inline=False)
     embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text=config['license_notice'])
