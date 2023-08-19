@@ -13,22 +13,7 @@ import calendar
 from pytz import timezone
 import random
 
-# Define the coordinates of your polygon
-polygon_filterPolygon = Polygon([
-    (43.67878795749117, -79.93304294115251),
-    (43.66090777561015, -80.55651706224626),
-    (43.276195634296236, -82.07263034349626),
-    (42.8548164344217, -82.28274386888688),
-    (42.29456999770389, -82.46813815599626),
-    (42.22443967103919, -81.72244113451188),
-    (42.38998433799022, -80.97674411302752),
-    (42.72985557217411, -79.52654880052752),
-    (42.84273447508291, -78.86187594896501),
-    (43.268196428606124, -79.06237643724626),
-    (43.30418457436259, -79.67211764818376),
-    (43.67878795749117, -79.93304294115251)
-])
-
+# Define the coordinates of your polygons
 polygon_GTA = Polygon([
     (43.87568031, -78.43468662),
     (43.82078823, -78.88855484),
@@ -317,9 +302,6 @@ polygon_SouthernOntario = Polygon([
 with open('config.json', 'r') as f:
     config = json.load(f)
 
-# Define if we should use the filter or just open it up wide to everyone
-skipPolygon = True
-
 DISCORD_WEBHOOK_URL = os.environ['DISCORD_WEBHOOK']
 AWS_ACCESS_KEY_ID = os.environ['AWS_DB_KEY']
 AWS_SECRET_ACCESS_KEY = os.environ['AWS_DB_SECRET_ACCESS_KEY']
@@ -513,62 +495,60 @@ def check_and_post_events():
         if event['IsFullClosure']:
             # Create a point from the event's coordinates
             point = Point(event['Latitude'], event['Longitude'])
-            # Check if the point is within the polygon
-            if polygon_filterPolygon.contains(point) | skipPolygon:
-                # Try to get the event with the specified ID and isActive=1 from the DynamoDB table
-                dbResponse = table.query(
-                    KeyConditionExpression=Key('EventID').eq(event['ID']),
-                    FilterExpression=Attr('isActive').eq(1)
-                )
-                #If the event is not in the DynamoDB table
-                if not dbResponse['Items']:
-                    # Set the EventID key in the event data
-                    event['EventID'] = event['ID']
-                    # Set the isActive attribute
-                    event['isActive'] = 1
-                    # set LastTouched
-                    event['lastTouched'] = utc_timestamp
-                    event['DetectedPolygon'] = check_which_polygon_point(point)
-                    # Convert float values in the event to Decimal
-                    event = float_to_decimal(event)
-                    # If the event is within the specified area and has not been posted before, post it to Discord
-                    post_to_discord_closure(event,event['DetectedPolygon'])
-                    # Add the event ID to the DynamoDB table
-                    table.put_item(Item=event)
-                else:
-                    # We have seen this event before
-                    # First, let's see if it has a lastupdated time
-                    event = float_to_decimal(event)
-                    lastUpdated = dbResponse['Items'][0].get('LastUpdated')
-                    if lastUpdated != None:
-                        # Now, see if the version we stored is different
-                        if lastUpdated != event['LastUpdated']:
-                            # Store the most recent updated time:
-                            event['EventID'] = event['ID']
-                            event['isActive'] = 1
-                            event['lastTouched'] = utc_timestamp
-                            event['DetectedPolygon'] = check_which_polygon_point(point)
-                            # It's different, so we should fire an update notification
-                            post_to_discord_updated(event,event['DetectedPolygon'])
-                            table.put_item(Item=event)
-                    # get the lasttouched time
-                    lastTouched_datetime = datetime.fromtimestamp(int(dbResponse['Items'][0].get('lastTouched')))
-                    # store the current time now
-                    now = datetime.fromtimestamp(utc_timestamp)
-                    # Compute the difference in minutes between now and lastUpdated
-                    time_diff_min = (now - lastTouched_datetime).total_seconds() / 60
-                    # Compute the variability
-                    variability = random.uniform(-2, 2)  # random float between -2 and 2
-                    # Add variability to the time difference
-                    time_diff_min += variability
-                    # If time_diff_min > 5, then more than 5 minutes have passed (considering variability)
-                    if abs(time_diff_min) > 5:
-                        # let's store that we just saw it to keep track of the last touch time
-                        table.update_item(
-                            Key={'EventID': event['ID']},
-                            UpdateExpression="SET lastTouched = :val",
-                            ExpressionAttributeValues={':val': utc_timestamp}
-                        )
+            # Try to get the event with the specified ID and isActive=1 from the DynamoDB table
+            dbResponse = table.query(
+                KeyConditionExpression=Key('EventID').eq(event['ID']),
+                FilterExpression=Attr('isActive').eq(1)
+            )
+            #If the event is not in the DynamoDB table
+            if not dbResponse['Items']:
+                # Set the EventID key in the event data
+                event['EventID'] = event['ID']
+                # Set the isActive attribute
+                event['isActive'] = 1
+                # set LastTouched
+                event['lastTouched'] = utc_timestamp
+                event['DetectedPolygon'] = check_which_polygon_point(point)
+                # Convert float values in the event to Decimal
+                event = float_to_decimal(event)
+                # If the event is within the specified area and has not been posted before, post it to Discord
+                post_to_discord_closure(event,event['DetectedPolygon'])
+                # Add the event ID to the DynamoDB table
+                table.put_item(Item=event)
+            else:
+                # We have seen this event before
+                # First, let's see if it has a lastupdated time
+                event = float_to_decimal(event)
+                lastUpdated = dbResponse['Items'][0].get('LastUpdated')
+                if lastUpdated != None:
+                    # Now, see if the version we stored is different
+                    if lastUpdated != event['LastUpdated']:
+                        # Store the most recent updated time:
+                        event['EventID'] = event['ID']
+                        event['isActive'] = 1
+                        event['lastTouched'] = utc_timestamp
+                        event['DetectedPolygon'] = check_which_polygon_point(point)
+                        # It's different, so we should fire an update notification
+                        post_to_discord_updated(event,event['DetectedPolygon'])
+                        table.put_item(Item=event)
+                # get the lasttouched time
+                lastTouched_datetime = datetime.fromtimestamp(int(dbResponse['Items'][0].get('lastTouched')))
+                # store the current time now
+                now = datetime.fromtimestamp(utc_timestamp)
+                # Compute the difference in minutes between now and lastUpdated
+                time_diff_min = (now - lastTouched_datetime).total_seconds() / 60
+                # Compute the variability
+                variability = random.uniform(-2, 2)  # random float between -2 and 2
+                # Add variability to the time difference
+                time_diff_min += variability
+                # If time_diff_min > 5, then more than 5 minutes have passed (considering variability)
+                if abs(time_diff_min) > 5:
+                    # let's store that we just saw it to keep track of the last touch time
+                    table.update_item(
+                        Key={'EventID': event['ID']},
+                        UpdateExpression="SET lastTouched = :val",
+                        ExpressionAttributeValues={':val': utc_timestamp}
+                    )
 
 def close_recent_events(responseObject):
     #function uses the API response from ON511 to determine what we stored in the DB that can now be closed
@@ -582,11 +562,21 @@ def close_recent_events(responseObject):
     response = table.scan(
         FilterExpression=Attr('isActive').eq(1)
     )
-
     # Iterate over the items
     for item in response['Items']:
+        markCompleted = False
         # If an item's ID is not in the set of active event IDs, mark it as closed
         if item['EventID'] not in active_event_ids:
+            markCompleted = True
+        else:
+            # item exists, but now we need to check to see if it's no longer a full closure
+            event = [x for x in data if x['ID']==item['EventID']]
+            if event:
+                if event[0]['IsFullClosure'] is False:
+                    #now it's no longer a full closure - markt it as closed.
+                    markCompleted = True
+        # process relevant completions
+        if markCompleted == True:
             # Convert float values in the item to Decimal
             item = float_to_decimal(item)
             # Remove the isActive attribute from the item
