@@ -11,7 +11,19 @@ import os
 from datetime import datetime, timedelta, date
 import calendar
 from pytz import timezone
+import logging
 import random
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.StreamHandler()  # Logs to the console
+    ]
+)
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 # Define the coordinates of your polygons
 polygon_GTA = Polygon([
@@ -527,8 +539,15 @@ except (NoCredentialsError, PartialCredentialsError):
 # Specify the name of your DynamoDB table
 table = dynamodb.Table(config['db_name'])
 
+utc_timestamp = None
+
+def update_utc_timestamp():
+    global utc_timestamp
+    utc_timestamp = calendar.timegm(datetime.utcnow().timetuple())
+
 # set the current UTC timestamp for use in a few places
-utc_timestamp = calendar.timegm(datetime.utcnow().timetuple())
+update_utc_timestamp()
+
 
 # Function to convert the float values in the event data to Decimal, as DynamoDB doesn't support float type
 def float_to_decimal(event):
@@ -706,9 +725,11 @@ def check_and_post_events():
             # Try to get the event with the specified ID and isActive=1 from the DynamoDB table
             dbResponse = table.query(
                 KeyConditionExpression=Key('EventID').eq(event['ID']),
-                FilterExpression=Attr('isActive').eq(1)
+                FilterExpression=Attr('isActive').eq(1),
+                ConsistentRead=True
             )
             #If the event is not in the DynamoDB table
+            update_utc_timestamp()
             if not dbResponse['Items']:
                 # Set the EventID key in the event data
                 event['EventID'] = event['ID']
@@ -739,8 +760,13 @@ def check_and_post_events():
                         # It's different, so we should fire an update notification
                         post_to_discord_updated(event,event['DetectedPolygon'])
                         table.put_item(Item=event)
-                # get the lasttouched time
-                lastTouched_datetime = datetime.fromtimestamp(int(dbResponse['Items'][0].get('lastTouched')))
+                # Get the lastTouched time
+                lastTouched = dbResponse['Items'][0].get('lastTouched')
+                if lastTouched is None:
+                    logging.warning(f"EventID: {event['ID']} - Missing lastTouched. Setting it now.")
+                    lastTouched_datetime = now
+                else:
+                    lastTouched_datetime = datetime.fromtimestamp(int(lastTouched))
                 # store the current time now
                 now = datetime.fromtimestamp(utc_timestamp)
                 # Compute the difference in minutes between now and lastUpdated
@@ -749,14 +775,22 @@ def check_and_post_events():
                 variability = random.uniform(-2, 2)  # random float between -2 and 2
                 # Add variability to the time difference
                 time_diff_min += variability
+                # Log calculated time difference and variability
+                logging.info(
+                    f"EventID: {event['ID']}, TimeDiff: {time_diff_min:.2f} minutes (Variability: {variability:.2f}), LastTouched: {lastTouched_datetime}, Now: {now}"
+                )
                 # If time_diff_min > 5, then more than 5 minutes have passed (considering variability)
                 if abs(time_diff_min) > 5:
-                    # let's store that we just saw it to keep track of the last touch time
-                    table.update_item(
+                    logging.info(f"EventID: {event['ID']} - Updating lastTouched to {utc_timestamp}.")
+                    response = table.update_item(
                         Key={'EventID': event['ID']},
                         UpdateExpression="SET lastTouched = :val",
                         ExpressionAttributeValues={':val': utc_timestamp}
                     )
+                    logging.info(f"Update response for EventID {event['ID']}: {response}")
+                    logging.info(f"EventID: {event['ID']} - lastTouched updated successfully.")
+                # else:
+                #     logging.info(f"EventID: {event['ID']} - No update needed. TimeDiff: {time_diff_min:.2f}")
 
 def close_recent_events(responseObject):
     #function uses the API response from ON511 to determine what we stored in the DB that can now be closed
@@ -887,3 +921,9 @@ def generate_geojson():
 
 def lambda_handler(event, context):
     check_and_post_events()
+
+if __name__ == "__main__":
+    # Simulate the Lambda environment by passing an empty event and context
+    event = {}
+    context = None
+    lambda_handler(event, context)
