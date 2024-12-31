@@ -8,6 +8,9 @@ from moto import mock_aws
 import boto3
 import os
 
+# Add this before the scrape import
+os.environ['DISCORD_WEBHOOK'] = 'https://mock-discord-webhook.com/test'
+
 from scrape import (
     check_which_polygon_point, getThreadID, unix_to_readable,
     post_to_discord_closure, post_to_discord_updated, post_to_discord_completed,
