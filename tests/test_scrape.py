@@ -219,8 +219,19 @@ def test_check_which_polygon_point_invalid_input():
     point = Point(0, 0)  # Use valid coordinates that should return 'Other'
     assert check_which_polygon_point(point) == 'Other'
 
+@mock_aws
 @patch('scrape.requests.get')
 def test_check_and_post_events_api_error(mock_get):
-    mock_get.return_value.ok = False
-    with pytest.raises(Exception, match='Issue connecting to ON511 API'):
-        check_and_post_events()
+    # Set up mock DynamoDB table
+    dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+    table = dynamodb.create_table(
+        TableName='test-db',
+        KeySchema=[{'AttributeName': 'EventID', 'KeyType': 'HASH'}],
+        AttributeDefinitions=[{'AttributeName': 'EventID', 'AttributeType': 'S'}],
+        BillingMode='PAY_PER_REQUEST'
+    )
+    
+    with patch('scrape.table', table):
+        mock_get.return_value.ok = False
+        with pytest.raises(Exception, match='Issue connecting to ON511 API'):
+            check_and_post_events()
