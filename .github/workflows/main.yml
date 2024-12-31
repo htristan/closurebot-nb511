@@ -104,4 +104,7 @@ jobs:
 
     - name: Deploy to AWS Lambda
       run: |
-        aws lambda update-function-code --function-name ${{ steps.env_vars.outputs.FUNCTION_NAME }} --zip-file fileb://function.zip | jq 'del(.Environment)' | cat
+        if ! aws lambda update-function-code --function-name ${{ steps.env_vars.outputs.FUNCTION_NAME }} --zip-file fileb://function.zip | jq 'del(.Environment)' | cat; then
+          echo "Failed to deploy to AWS Lambda"
+          exit 1
+        fi
