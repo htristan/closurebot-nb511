@@ -3,3 +3,6 @@ config.json
 venv/
 emailsamples/
 closurebot-on511.code-workspace
+*.pyc
+*.pyo
+*.pyd

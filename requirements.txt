@@ -21,4 +21,8 @@ shapely==2.0.1
 six==1.16.0
 urllib3==1.26.16
 yarl==1.9.2
-logging
+freezegun==1.5.1
+logging==0.4.9.6
+moto==5.0.25
+pytest==8.3.4
+pytest-mock==3.14.0
