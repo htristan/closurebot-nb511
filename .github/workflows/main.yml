@@ -1,4 +1,4 @@
-name: Deploy to AWS Lambda
+name: Test and Deploy to AWS Lambda
 
 permissions:
   id-token: write
@@ -11,9 +11,8 @@ on:
       - develop
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -28,6 +27,25 @@ jobs:
           cp config_develop.json config.json
         fi
 
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run tests
+      run: |
+        pytest tests/
+
+  deploy:
+    needs: test  # This makes deploy wait for test to succeed
+    runs-on: ubuntu-latest
+    steps:
     - name: Set environment variables
       id: env_vars
       run: ./set_env_vars.sh
