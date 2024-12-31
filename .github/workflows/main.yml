@@ -46,6 +46,19 @@ jobs:
     needs: test  # This makes deploy wait for test to succeed
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Copy the correct config file based on branch
+      run: |
+        if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          cp config_production.json config.json
+        elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+          cp config_develop.json config.json
+        else
+          cp config_develop.json config.json
+        fi
+
     - name: Set environment variables
       id: env_vars
       run: ./set_env_vars.sh
