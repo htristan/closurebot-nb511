@@ -1,6 +1,9 @@
 # Use the official AWS Lambda Python 3.11 base image
 FROM public.ecr.aws/lambda/python:3.11
 
+# Install git (required for git dependencies in requirements.txt)
+RUN yum update -y && yum install -y git
+
 # Copy requirements and install dependencies
 COPY requirements.txt ${LAMBDA_TASK_ROOT}
 RUN pip install -r requirements.txt
