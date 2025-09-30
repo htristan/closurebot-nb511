@@ -1,6 +1,7 @@
 config.json
 .env_vars
 venv/
+venv311/
 emailsamples/
 closurebot-on511.code-workspace
 *.pyc
