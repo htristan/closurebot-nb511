@@ -1,0 +1,13 @@
+# Use the official AWS Lambda Python 3.11 base image
+FROM public.ecr.aws/lambda/python:3.11
+
+# Copy requirements and install dependencies
+COPY requirements.txt ${LAMBDA_TASK_ROOT}
+RUN pip install -r requirements.txt
+
+# Copy application code
+COPY scrape.py ${LAMBDA_TASK_ROOT}
+COPY config.json ${LAMBDA_TASK_ROOT}
+
+# Set the CMD to your handler
+CMD ["scrape.lambda_handler"]
