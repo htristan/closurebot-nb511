@@ -3,7 +3,7 @@ name: Test and Deploy to AWS Lambda
 permissions:
   id-token: write
   contents: read
-  packages: write
+  packages: write # Added for ECR permissions
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
         pytest tests/
 
   deploy:
-    needs: test  # This makes deploy wait for test to succeed
+    needs: test
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -65,7 +65,7 @@ jobs:
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
-      with: 
+      with:
         audience: sts.amazonaws.com
         role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
         aws-region: us-east-1
@@ -94,11 +94,12 @@ jobs:
         IMAGE_URI="${{ steps.build-image.outputs.image }}"
         echo "Deploying image: $IMAGE_URI"
         
-        if ! aws lambda update-function-code \
+        # Deploy with proper error handling
+        if aws lambda update-function-code \
           --function-name ${{ steps.env_vars.outputs.FUNCTION_NAME }} \
-          --image-uri $IMAGE_URI | jq 'del(.Environment)' | cat; then
-          echo "Failed to deploy to AWS Lambda"
-          exit 1
+          --image-uri $IMAGE_URI; then
+          echo "✅ Successfully deployed to AWS Lambda"
         else
-          echo "Successfully deployed to AWS Lambda"
+          echo "❌ Failed to deploy to AWS Lambda"
+          exit 1
         fi
