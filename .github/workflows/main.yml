@@ -82,6 +82,18 @@ jobs:
         IMAGE_TAG: closurebot-on511-${{ github.sha }}
         LATEST_TAG: closurebot-on511-latest
       run: |
+        # Set image tags based on branch
+        if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
+          IMAGE_TAG="closurebot-on511-${{ github.sha }}"
+          LATEST_TAG="closurebot-on511-latest"
+        elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+          IMAGE_TAG="closurebot-on511-dev-${{ github.sha }}"
+          LATEST_TAG="closurebot-on511-dev-latest"
+        else
+          IMAGE_TAG="closurebot-on511-dev-${{ github.sha }}"
+          LATEST_TAG="closurebot-on511-dev-latest"
+        fi
+        
         # Build a docker container and push it to ECR
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG
