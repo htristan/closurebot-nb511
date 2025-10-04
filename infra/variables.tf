@@ -14,7 +14,7 @@ variable "aws_region" {
 }
 
 variable "github_repo" {
-  description = "GitHub repository in format owner/repo (e.g., username/closurebot-on511)"
+  description = "GitHub repository in format owner/repo (e.g., username/closurebot-on511). Auto-detected from GITHUB_REPOSITORY env var if not provided."
   type        = string
   default     = ""
 }
