@@ -110,6 +110,9 @@ jobs:
         
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG" >> $GITHUB_OUTPUT
 
+    - name: Wait for ECR propagation
+      run: sleep 10
+
     - name: Deploy to AWS Lambda
       run: |
         IMAGE_URI="${{ steps.build-image.outputs.image }}"
