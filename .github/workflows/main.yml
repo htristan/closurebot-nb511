@@ -78,27 +78,36 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: closurebot
-        IMAGE_TAG: closurebot-on511-${{ github.sha }}
-        LATEST_TAG: latest-closurebot-on511
+        PROJECT_NAME: closurebot-on511
       run: |
-        # Set image tags based on branch
+        # Set ECR repository and tags based on branch
         if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then
-          IMAGE_TAG="closurebot-on511-${{ github.sha }}"
-          LATEST_TAG="latest-closurebot-on511"
+          ECR_REPOSITORY="${PROJECT_NAME}-prod"
+          IMAGE_TAG="${PROJECT_NAME}-${{ github.sha }}"
+          LATEST_TAG="latest-${PROJECT_NAME}"
         elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-          IMAGE_TAG="closurebot-on511-dev-${{ github.sha }}"
-          LATEST_TAG="latest-closurebot-on511-dev"
+          ECR_REPOSITORY="${PROJECT_NAME}-dev"
+          IMAGE_TAG="${PROJECT_NAME}-dev-${{ github.sha }}"
+          LATEST_TAG="latest-${PROJECT_NAME}-dev"
         else
-          IMAGE_TAG="closurebot-on511-dev-${{ github.sha }}"
-          LATEST_TAG="latest-closurebot-on511-dev"
+          # Default to dev for other branches
+          ECR_REPOSITORY="${PROJECT_NAME}-dev"
+          IMAGE_TAG="${PROJECT_NAME}-dev-${{ github.sha }}"
+          LATEST_TAG="latest-${PROJECT_NAME}-dev"
         fi
         
-        # Build a docker container and push it to ECR
+        echo "ECR_REPOSITORY=$ECR_REPOSITORY" >> $GITHUB_ENV
+        echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+        echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+        
+        # Build and push commit-tagged image
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-        docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        
+        # Build and push latest-tagged image (separate build with unique identifier)
+        docker build --build-arg BUILD_TYPE=latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG
+        
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG" >> $GITHUB_OUTPUT
 
     - name: Deploy to AWS Lambda
