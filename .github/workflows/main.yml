@@ -104,8 +104,8 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         
-        # Build and push latest-tagged image (separate)
-        docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG .
+        # Build and push latest-tagged image (separate build with unique identifier)
+        docker build --build-arg BUILD_TYPE=latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG
         
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG" >> $GITHUB_OUTPUT
