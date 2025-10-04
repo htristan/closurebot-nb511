@@ -97,7 +97,7 @@ resource "aws_ecr_lifecycle_policy" "prod" {
         description  = "Delete commit-tagged images older than 2 days"
         selection = {
           tagStatus     = "tagged"
-          tagPatternList = ["*-[a-f0-9]{40}"]
+          tagPrefixList = ["closurebot-"]
           countType     = "sinceImagePushed"
           countUnit     = "days"
           countNumber   = 2
@@ -148,7 +148,7 @@ resource "aws_ecr_lifecycle_policy" "dev" {
         description  = "Delete commit-tagged images older than 2 days"
         selection = {
           tagStatus     = "tagged"
-          tagPatternList = ["*-[a-f0-9]{40}"]
+          tagPrefixList = ["closurebot-"]
           countType     = "sinceImagePushed"
           countUnit     = "days"
           countNumber   = 2
