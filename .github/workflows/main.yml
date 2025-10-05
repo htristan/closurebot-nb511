@@ -111,19 +111,36 @@ jobs:
         echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG" >> $GITHUB_OUTPUT
 
     - name: Wait for ECR propagation
-      run: sleep 5
+      run: sleep 30
 
-    - name: Deploy to AWS Lambda
+    - name: Deploy to AWS Lambda with retry
       run: |
         IMAGE_URI="${{ steps.build-image.outputs.image }}"
         echo "Deploying image: $IMAGE_URI"
         
-        # Deploy with proper error handling
-        if aws lambda update-function-code \
-          --function-name ${{ steps.env_vars.outputs.FUNCTION_NAME }} \
-          --image-uri $IMAGE_URI; then
-          echo "✅ Successfully deployed to AWS Lambda"
-        else
-          echo "❌ Failed to deploy to AWS Lambda"
-          exit 1
-        fi
+        # Retry logic for AWS propagation issues
+        MAX_ATTEMPTS=3
+        ATTEMPT=1
+        
+        while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+          echo "=== Attempt $ATTEMPT of $MAX_ATTEMPTS ==="
+          
+          if aws lambda update-function-code \
+            --function-name ${{ steps.env_vars.outputs.FUNCTION_NAME }} \
+            --image-uri $IMAGE_URI; then
+            echo "✅ Successfully deployed to AWS Lambda"
+            break
+          else
+            echo "❌ Attempt $ATTEMPT failed"
+            
+            if [ $ATTEMPT -lt $MAX_ATTEMPTS ]; then
+              echo "⏳ Waiting 30 seconds before retry..."
+              sleep 30
+            else
+              echo "❌ All attempts failed"
+              exit 1
+            fi
+          fi
+          
+          ATTEMPT=$((ATTEMPT + 1))
+        done
