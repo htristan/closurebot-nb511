@@ -802,9 +802,9 @@ def check_and_post_events():
             #If the event is not in the DynamoDB table
             update_utc_timestamp()
             
-            # Determine if this is a planned (future) closure (>1 hour in future)
-            one_hour_from_now = utc_timestamp + 3600
-            is_planned_closure = event['StartDate'] > one_hour_from_now
+            # Determine if this is a planned (future) closure (>30 minutes in future)
+            thirty_minutes_from_now = utc_timestamp + 1800
+            is_planned_closure = event['StartDate'] > thirty_minutes_from_now
             
             if not dbResponse['Items']:
                 # Set the EventID key in the event data
