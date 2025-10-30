@@ -648,8 +648,8 @@ def post_to_discord_planned_closure(event,threadName=None):
     url511 = f"https://511on.ca/map#{URLType}-{event['ID']}"
     urlLivemap = f"https://www.waze.com/live-map/directions?dir_first=no&latlng={event['Latitude']}%2C{event['Longitude']}&overlay=false&zoom=16"
 
-    # Use different color (orange/yellow) for planned closures
-    embed = DiscordEmbed(title=f"Planned Closure", color='ffa500')
+    # Use blue color for planned closures (informational/future)
+    embed = DiscordEmbed(title=f"Planned Closure", color='3498db')
     embed.add_embed_field(name="Road", value=event['RoadwayName'])
     embed.add_embed_field(name="Direction", value=event['DirectionOfTravel'])
     embed.add_embed_field(name="Information", value=event['Description'], inline=False)
