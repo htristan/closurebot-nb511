@@ -658,7 +658,7 @@ def post_to_discord_planned_closure(event,threadName=None):
         embed.add_embed_field(name="Planned End Time", value=unix_to_readable(event['PlannedEndDate']))
     embed.add_embed_field(name="Links", value=f"[511]({url511}) | [WME]({urlWME}) | [Livemap]({urlLivemap})", inline=False)
     embed.set_footer(text=config['license_notice'])
-    embed.set_timestamp(datetime.utcfromtimestamp(int(event['StartDate'])))
+    embed.set_timestamp(datetime.utcfromtimestamp(utc_timestamp))
     # Send the planned closure notification
     webhook.add_embed(embed)
     webhook.execute()
