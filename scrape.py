@@ -801,6 +801,11 @@ def check_and_post_events():
             )
             #If the event is not in the DynamoDB table
             update_utc_timestamp()
+            
+            # Determine if this is a planned (future) closure (>1 hour in future)
+            one_hour_from_now = utc_timestamp + 3600
+            is_planned_closure = event['StartDate'] > one_hour_from_now
+            
             if not dbResponse['Items']:
                 # Set the EventID key in the event data
                 event['EventID'] = str(event['ID'])
@@ -809,16 +814,45 @@ def check_and_post_events():
                 # set LastTouched
                 event['lastTouched'] = utc_timestamp
                 event['DetectedPolygon'] = check_which_polygon_point(point)
+                # Store whether this was initially a planned closure
+                event['wasPlannedClosure'] = 1 if is_planned_closure else 0
                 # Convert float values in the event to Decimal
                 event = float_to_decimal(event)
-                # If the event is within the specified area and has not been posted before, post it to Discord
-                post_to_discord_closure(event,event['DetectedPolygon'])
+                # Post to Discord based on whether it's planned or active
+                if is_planned_closure:
+                    post_to_discord_planned_closure(event, event['DetectedPolygon'])
+                    logging.info(f"EventID: {event['ID']} - Posted as PLANNED closure (starts in {(event['StartDate'] - utc_timestamp) / 3600:.1f} hours)")
+                else:
+                    post_to_discord_closure(event, event['DetectedPolygon'])
+                    logging.info(f"EventID: {event['ID']} - Posted as ACTIVE closure")
                 # Add the event ID to the DynamoDB table
                 table.put_item(Item=event)
             else:
                 # We have seen this event before
                 # First, let's see if it has a lastupdated time
                 event = float_to_decimal(event)
+                
+                # Check if this was a planned closure that has now become active
+                was_planned = dbResponse['Items'][0].get('wasPlannedClosure', 0)
+                stored_start_date = dbResponse['Items'][0].get('StartDate')
+                current_start_date = int(event['StartDate'])
+                
+                # If it was planned and start time has now passed, notify that it's now active
+                # Check both stored and current start date to handle cases where the start date might have been updated
+                if was_planned == 1 and stored_start_date:
+                    stored_start = int(stored_start_date) if isinstance(stored_start_date, (int, Decimal)) else int(float(str(stored_start_date)))
+                    if stored_start <= utc_timestamp or current_start_date <= utc_timestamp:
+                        logging.info(f"EventID: {event['ID']} - Planned closure is now ACTIVE")
+                        event['EventID'] = str(event['ID'])
+                        event['isActive'] = 1
+                        event['lastTouched'] = utc_timestamp
+                        event['DetectedPolygon'] = check_which_polygon_point(point)
+                        event['wasPlannedClosure'] = 0  # Mark as no longer planned
+                        # Post that the closure is now active
+                        post_to_discord_closure_now_active(event, event['DetectedPolygon'])
+                        table.put_item(Item=event)
+                
+                # Check for regular updates
                 lastUpdated = dbResponse['Items'][0].get('LastUpdated')
                 if lastUpdated != None:
                     # Now, see if the version we stored is different
@@ -828,6 +862,9 @@ def check_and_post_events():
                         event['isActive'] = 1
                         event['lastTouched'] = utc_timestamp
                         event['DetectedPolygon'] = check_which_polygon_point(point)
+                        # Preserve the wasPlannedClosure flag if it exists
+                        if 'wasPlannedClosure' not in event:
+                            event['wasPlannedClosure'] = dbResponse['Items'][0].get('wasPlannedClosure', 0)
                         # It's different, so we should fire an update notification
                         post_to_discord_updated(event,event['DetectedPolygon'])
                         table.put_item(Item=event)
