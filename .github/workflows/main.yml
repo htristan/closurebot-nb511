@@ -78,7 +78,7 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        PROJECT_NAME: closurebot-on511
+        PROJECT_NAME: closurebot-nb511
       run: |
         # Set ECR repository and tags based on branch
         if [[ "${{ github.ref }}" == "refs/heads/master" ]]; then

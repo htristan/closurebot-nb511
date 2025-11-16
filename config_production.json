@@ -1,11 +1,7 @@
 {
   "db_name": "NB511-ClosureDB",
   "function_name": "ClosureBot-NB511",
-  "api_key": "",
-  "Thread-SouthernOntario": 1124372222803460146,
-  "Thread-GTA": 1124372333189136546,
-  "Thread-Central_EasternOntario": 1124372488277721088,
-  "Thread-NorthernOntario": 1124372560528805990,
+  "api_key": "REMOVED_API_KEY",
   "Thread-CatchAll": 1124372653298438275,
   "license_notice": "Contains information licensed under the Open Government Licence – New Brunswick.",
   "timezone": "America/Moncton"
