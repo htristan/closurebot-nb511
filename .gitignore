@@ -11,3 +11,4 @@ closurebot-on511.code-workspace
 infra/.terraform/
 infra/.terraform.lock.hcl
 infra/terraform.tfstate*
+test_run.sh
