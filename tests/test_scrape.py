@@ -10,6 +10,7 @@ import os
 
 # Add this before the scrape import
 os.environ['DISCORD_WEBHOOK'] = 'https://mock-discord-webhook.com/test'
+os.environ['NB511_API_KEY'] = 'test-api-key'
 
 from scrape import (
     check_which_polygon_point, getThreadID, unix_to_readable,
@@ -55,8 +56,7 @@ def mock_config():
         'Thread-CatchAll': '567890',
         'timezone': 'America/Moncton',  # Updated for NB511
         'license_notice': 'Test License Notice',
-        'db_name': 'test-db',
-        'api_key': 'test-api-key'  # Added for NB511 API key requirement
+        'db_name': 'test-db'
     }
 
 # Polygon Tests

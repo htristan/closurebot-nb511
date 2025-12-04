@@ -520,7 +520,7 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_DB_KEY', None)
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_DB_SECRET_ACCESS_KEY', None)
 
 discordUsername = "NB511"
-discordAvatarURL = "https://pbs.twimg.com/profile_images/1256233970905341959/EKlyRkOM_400x400.jpg"
+discordAvatarURL = "https://pbs.twimg.com/profile_images/1085255845187702784/i-t0qacA_400x400.jpg"
 
 # Fallback mechanism for credentials
 try:
@@ -784,9 +784,9 @@ def check_and_post_events():
         update_last_execution_day()
 
     # Perform API call to NB511 API
-    api_key = config.get('api_key') or os.environ.get('NB511_API_KEY')
+    api_key = os.environ.get('NB511_API_KEY')
     if not api_key:
-        raise Exception('NB511 API key is required. Set api_key in config.json or NB511_API_KEY environment variable.')
+        raise Exception('NB511 API key is required. Set NB511_API_KEY environment variable.')
     
     api_url = "https://511.gnb.ca/api/v2/get/event"
     params = {

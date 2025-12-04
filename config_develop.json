@@ -1,7 +1,6 @@
 {
   "db_name": "NB511-ClosureDB-Dev",
   "function_name": "ClosureBot-NB511-Dev",
-  "api_key": "REMOVED_API_KEY",
   "Thread-CatchAll": 1439686747515519100,
   "license_notice": "Contains information licensed under the Open Government Licence – New Brunswick.",
   "timezone": "America/Moncton"
