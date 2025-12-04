@@ -1,7 +1,8 @@
 {
   "db_name": "NB511-ClosureDB",
   "function_name": "ClosureBot-NB511",
-  "Thread-CatchAll": 1124372653298438275,
+  "Thread-CatchAll": null,
+  "_Thread-CatchAll-note": "null = post to channel (webhook's default channel). Set to thread ID to post to a specific thread.",
   "license_notice": "Contains information licensed under the Open Government Licence – New Brunswick.",
   "timezone": "America/Moncton"
 }
