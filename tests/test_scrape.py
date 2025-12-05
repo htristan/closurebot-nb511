@@ -10,6 +10,7 @@ import os
 
 # Add this before the scrape import
 os.environ['DISCORD_WEBHOOK'] = 'https://mock-discord-webhook.com/test'
+os.environ['NB511_API_KEY'] = 'test-api-key'
 
 from scrape import (
     check_which_polygon_point, getThreadID, unix_to_readable,
@@ -52,22 +53,19 @@ def mock_dynamodb_table():
 @pytest.fixture
 def mock_config():
     return {
-        'Thread-GTA': '123456',
-        'Thread-Central_EasternOntario': '234567',
-        'Thread-NorthernOntario': '345678',
-        'Thread-SouthernOntario': '456789',
         'Thread-CatchAll': '567890',
-        'timezone': 'US/Eastern',
+        'timezone': 'America/Moncton',  # Updated for NB511
         'license_notice': 'Test License Notice',
         'db_name': 'test-db'
     }
 
 # Polygon Tests
+# Note: All polygons are commented out for NB511, so all points return 'Other'
 @pytest.mark.parametrize("coordinates,expected_region", [
-    ((43.6532, -79.3832), 'GTA'),  # Toronto
-    ((45.4215, -75.6972), 'Central & Eastern Ontario'),  # Ottawa
-    ((46.4917, -80.9930), 'Northern Ontario'),  # Sudbury
-    ((43.2557, -79.8711), 'Southern Ontario'),  # Hamilton
+    ((43.6532, -79.3832), 'Other'),  # Toronto (polygons commented out)
+    ((45.4215, -75.6972), 'Other'),  # Ottawa (polygons commented out)
+    ((46.4917, -80.9930), 'Other'),  # Sudbury (polygons commented out)
+    ((43.2557, -79.8711), 'Other'),  # Hamilton (polygons commented out)
     ((0, 0), 'Other'),  # Invalid point
 ])
 def test_check_which_polygon_point(coordinates, expected_region):
@@ -76,11 +74,12 @@ def test_check_which_polygon_point(coordinates, expected_region):
     assert check_which_polygon_point(point) == expected_region
 
 # Thread ID Tests
+# Note: All region-specific threads are commented out for NB511, so all return catch-all
 @pytest.mark.parametrize("region,expected_thread", [
-    ('GTA', '123456'),
-    ('Central & Eastern Ontario', '234567'),
-    ('Northern Ontario', '345678'),
-    ('Southern Ontario', '456789'),
+    ('GTA', '567890'),  # All regions go to catch-all now
+    ('Central & Eastern Ontario', '567890'),
+    ('Northern Ontario', '567890'),
+    ('Southern Ontario', '567890'),
     ('Other', '567890'),
     ('Invalid', '567890'),
 ])
@@ -89,13 +88,15 @@ def test_getThreadID(region, expected_thread, mock_config):
         assert getThreadID(region) == expected_thread
 
 # Time Conversion Tests
+# Note: Updated for America/Moncton timezone (AST/ADT, UTC-4/UTC-3)
 @pytest.mark.parametrize("timestamp,expected_time", [
-    (1672574400, '2023-Jan-01 07:00 AM'),  # Regular case
-    (1672531200, '2022-Dec-31 07:00 PM'),  # Corrected expected time
+    (1672574400, '2023-Jan-01 08:00 AM'),  # UTC to AST (UTC-4 in winter)
+    (1672531200, '2022-Dec-31 08:00 PM'),  # UTC to AST (UTC-4 in winter)
 ])
 @freeze_time("2023-01-01 12:00:00", tz_offset=0)
-def test_unix_to_readable(timestamp, expected_time):
-    assert unix_to_readable(timestamp) == expected_time
+def test_unix_to_readable(timestamp, expected_time, mock_config):
+    with patch('scrape.config', mock_config):
+        assert unix_to_readable(timestamp) == expected_time
 
 # Discord Posting Tests
 @patch('scrape.DiscordWebhook')
@@ -194,7 +195,7 @@ def test_float_to_decimal(sample_event):
 # Main Function Test
 @patch('scrape.requests.get')
 @patch('scrape.post_to_discord_closure')
-def test_check_and_post_events(mock_post, mock_get, mock_dynamodb_table, sample_events):
+def test_check_and_post_events(mock_post, mock_get, mock_dynamodb_table, sample_events, mock_config):
     # Modify sample event to ensure it triggers a post
     sample_events[0]['IsFullClosure'] = True
     
@@ -221,7 +222,7 @@ def test_check_which_polygon_point_invalid_input():
 
 @mock_aws
 @patch('scrape.requests.get')
-def test_check_and_post_events_api_error(mock_get):
+def test_check_and_post_events_api_error(mock_get, mock_config):
     # Set up mock DynamoDB table
     dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
     table = dynamodb.create_table(
@@ -231,7 +232,8 @@ def test_check_and_post_events_api_error(mock_get):
         BillingMode='PAY_PER_REQUEST'
     )
     
-    with patch('scrape.table', table):
+    with patch('scrape.table', table), \
+         patch('scrape.config', mock_config):
         mock_get.return_value.ok = False
-        with pytest.raises(Exception, match='Issue connecting to ON511 API'):
+        with pytest.raises(Exception, match='Issue connecting to NB511 API'):
             check_and_post_events()
