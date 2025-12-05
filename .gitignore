@@ -3,7 +3,7 @@ config.json
 venv/
 venv311/
 emailsamples/
-closurebot-on511.code-workspace
+closurebot-nb511.code-workspace
 *.pyc
 *.pyo
 *.pyd
